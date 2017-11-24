@@ -51,31 +51,22 @@ int main()
 
 
 
-
 	//拼接http字符串格式
-
 	char str1[4096];
-
 	memset(str1, 0, 4096);
-	strcat(str1, "POST /mobile/list.do HTTP/1.1\n");  //请求行：  |请求方式|空格|你要访问的具体位置|空格|http版本|换行符号|
+	strcat(str1, "POST /mobile/bind.do HTTP/1.1\n");  //请求行：  |请求方式|空格|你要访问的具体位置|空格|http版本|换行符号|
 	strcat(str1, "Host: 116.62.11.154:8080\n");       //请求头：  |key头名字段|冒号|值|换行符号|
 	strcat(str1, "mobile: 18717791650\n");
 	strcat(str1, "password: 123\n");
-	strcat(str1, "ContentType: application/x-www-form-urlencoded; charset=UTF-8\n");
-	strcat(str1, "Content-Length: 0");
-	strcat(str1, "\r\n\r\n");                          //结尾：   |回车换行回车换行| 
+	strcat(str1, "Content-Type: application/x-www-form-urlencoded; charset=UTF-8\n");// body数据类型：    |Content-Type|冒号|xxxxxxxx|分号|xxxxxx|换行符号|
+	strcat(str1, "Content-Length: 25\n");                                            // body递字符的个数： |Content-Length|冒号|个数|换行符号|
+	strcat(str1, "\n");                                                              // header和body隔开：|换行符号|
+	strcat(str1, "binding-device=DY09000105\n");                                     // body ：           |xxxxx|换行符号|     
 
 
 
-
-
-
-
-
-
-
-
-	//5.发送
+																					 
+	//5.发送http格式的数据
 	if ((Ret = send(s, str1, sizeof(str1), 0)) == SOCKET_ERROR)
 	{
 		printf("Sent failed with error %d.\n", WSAGetLastError());
@@ -90,7 +81,7 @@ int main()
 	}
 
 
-
+	//接收http返回
 	char DataBuffer[10240];//缓存客服端发送的数据
 						   //6.用客服端的套接字去接收,客服端的数据,函数“recv”
 	if ((Ret = recv(s, DataBuffer, sizeof(DataBuffer), 0)) == SOCKET_ERROR)
@@ -99,13 +90,15 @@ int main()
 		closesocket(s);
 		WSACleanup();
 	}
+	//到这一行http请求返回的数据已经存入DataBuffer中
 	else
 	{
+		//显示
 		wchar_t *pwText = NULL;
 		DataBuffer[Ret] = '\0';
 		DWORD dwNum = MultiByteToWideChar(CP_UTF8, 0, DataBuffer, -1, NULL, 0);    //返回原始ASCII码的字符数目       
-		pwText = new wchar_t[dwNum];                                              //根据ASCII码的字符数分配UTF8的空间
-		MultiByteToWideChar(CP_UTF8, 0, DataBuffer, -1, pwText, dwNum);           //将ASCII码转换成UTF8
+		pwText = new wchar_t[dwNum];                                               //根据ASCII码的字符数分配UTF8的空间
+		MultiByteToWideChar(CP_UTF8, 0, DataBuffer, -1, pwText, dwNum);            //将ASCII码转换成UTF8
 		
 
 		int iSize;
@@ -115,7 +108,8 @@ int main()
 		pszMultiByte = (char*)malloc(iSize * sizeof(char)); //不需要 pszMultiByte = (char*)malloc(iSize*sizeof(char)+1);
 		WideCharToMultiByte(CP_ACP, 0, pwText, -1, pszMultiByte, iSize, NULL, NULL);
 
-		printf("http请求成功:\n%s", pszMultiByte);
+		printf("====================http请求成功:=================\n\n%s\n\n=================================================\n",
+			pszMultiByte);
 
 		
 	}
